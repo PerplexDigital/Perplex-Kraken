@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="interfaces">
-      <HintPath>..\packages\UmbracoCms.Core.4.5.2\interfaces.dll</HintPath>
+      <HintPath>..\packages\UmbracoCms.Core.6.2.5\lib\interfaces.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />

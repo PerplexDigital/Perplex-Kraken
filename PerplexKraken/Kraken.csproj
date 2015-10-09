@@ -35,20 +35,23 @@
   <ItemGroup>
     <Reference Include="businesslogic">
       <HintPath>..\packages\UmbracoCms.Core.7.3.0\lib\businesslogic.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="cms">
       <HintPath>..\packages\UmbracoCms.Core.7.3.0\lib\cms.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="interfaces, Version=1.0.5750.18155, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\UmbracoCms.Core.7.3.0\lib\interfaces.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="RestSharp">
       <HintPath>..\Input\RestSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System">
       <Private>False</Private>
@@ -67,18 +70,22 @@
     <Reference Include="System.Web.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System.Xml">
       <Private>False</Private>
     </Reference>
     <Reference Include="umbraco">
       <HintPath>..\packages\UmbracoCms.Core.7.3.0\lib\umbraco.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Umbraco.Core">
       <HintPath>..\packages\UmbracoCms.Core.7.3.0\lib\Umbraco.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="umbraco.editorControls">
       <HintPath>..\packages\UmbracoCms.Core.7.3.0\lib\umbraco.editorControls.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -136,11 +143,6 @@
 xcopy "$(SolutionDir)PerplexKraken\Controls\Overview.ascx" "$(SolutionDir)Input\Kraken\" /Y /S
 xcopy "$(SolutionDir)PerplexKraken\Controls\Status.ascx" "$(SolutionDir)Input\Kraken\" /Y /S</PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />
-  <Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == ''">
-    <Error Condition="!Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
-    <Error Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
