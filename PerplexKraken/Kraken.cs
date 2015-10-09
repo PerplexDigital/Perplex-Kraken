@@ -9,7 +9,7 @@ namespace Kraken
 {
     // Alles wat niet gerelateerd is aan Umbraco hier
     internal partial class Kraken
-    {
+    { 
         static Thread _krakThread;
 
         public string file_name { get; set; }
