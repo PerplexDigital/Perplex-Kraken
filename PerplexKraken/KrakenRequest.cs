@@ -100,6 +100,19 @@ namespace Kraken
             [DataMember(IsRequired = true)]
             public bool wait { get; private set; }
 
+            [DataMember]
+            public bool json // W 25-11-2015: Callback URL altijd als json
+            {
+                get
+                {
+                    return true;
+                }
+                set
+                {
+
+                }
+            }
+
             string _callbackUrl;
             [DataMember(EmitDefaultValue = false)]
             public string callback_url
@@ -114,7 +127,7 @@ namespace Kraken
                     else
                     {
                         if (System.Web.HttpContext.Current != null)
-                            return "http://requestb.in/1ig318m1";//    string url = "/Base/PerplexKraken/KrakenResults";
+                            return "http://requestb.in/wrpmhgwr";//    string url = "/Base/PerplexKraken/KrakenResults";
                         //return System.Web.HttpContext.Current.Request.Url.Scheme + "://" + System.Web.HttpContext.Current.Request.Url.Host + Kraken.umbracoCallbackUrl;
                         else
                             return null;

@@ -65,26 +65,29 @@ namespace Kraken
         {
             try
             {
-                string post = new StreamReader(HttpContext.Current.Request.InputStream, Encoding.UTF8).ReadToEnd();
-                post = HttpUtility.UrlDecode(post);
-                var parameters = post.Split('&').Select(x => x.Split('='));
-                var result = new T();
-                var properties = typeof(T).GetProperties();
-                foreach (var p in parameters)
-                    if (p == null || p.Length != 2)
-                        continue;
-                    else
-                    {
-                        var pi = properties.FirstOrDefault(x => x.Name == p[0]);
-                        if (pi != null)
-                            if (pi.PropertyType == typeof(int))
-                                pi.SetValue(result, int.Parse(p[1]), null);
-                            else if (pi.PropertyType == typeof(bool))
-                                pi.SetValue(result, bool.Parse(p[1]), null);
-                            else
-                                pi.SetValue(result, p[1], null);
-                    }
-                return result;
+                if (HttpContext.Current.Request.ContentType == "application/x-www-form-urlencoded")
+                {
+                    data = HttpUtility.UrlDecode(data);
+                    var parameters = data.Split('&').Select(x => x.Split('='));
+                    var result = new T();
+                    var properties = typeof(T).GetProperties();
+                    foreach (var p in parameters)
+                        if (p == null || p.Length != 2)
+                            continue;
+                        else
+                        {
+                            var pi = properties.FirstOrDefault(x => x.Name == p[0]);
+                            if (pi != null)
+                                if (pi.PropertyType == typeof(int))
+                                    pi.SetValue(result, int.Parse(p[1]), null);
+                                else if (pi.PropertyType == typeof(bool))
+                                    pi.SetValue(result, bool.Parse(p[1]), null);
+                                else
+                                    pi.SetValue(result, p[1], null);
+                        }
+                    return result;
+                } else
+                    return FromJSON<T>(data);
             }
             catch 
             {

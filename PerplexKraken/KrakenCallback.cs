@@ -11,7 +11,6 @@ namespace Kraken
     public class KrakenCallbackApiController : UmbracoApiController
     {
         [HttpPost]
-        //public void KrakenResults(Kraken results) // W: Toch maar liever alle klasses internal houden
         public void KrakenResults()
         {
             try
