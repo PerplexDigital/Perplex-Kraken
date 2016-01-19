@@ -114,10 +114,32 @@ namespace Kraken
                     var uef = _eventFiles.FirstOrDefault(x => x.Id == im.Id);
                     if (uef != null)
                     {
+                        // Read height
+                        int height = 0, width = 0, size = 0;
+                        var propertyValue = im.GetValue(Constants.UmbracoPropertyAliasHeight);
+                        if (propertyValue != null)
+                            if (propertyValue is int)
+                                height = (int)propertyValue;
+                            else
+                                int.TryParse(propertyValue as String, out height);
+                        // Read width
+                        propertyValue = im.GetValue(Constants.UmbracoPropertyAliasWidth);
+                        if (propertyValue != null)
+                            if (propertyValue is int)
+                                width = (int)propertyValue;
+                            else
+                                int.TryParse(propertyValue as String, out width);
+                        // Read size
+                        propertyValue = im.GetValue(Constants.UmbracoPropertyAliasSize);
+                        if (propertyValue != null)
+                            if (propertyValue is int)
+                                size = (int)propertyValue;
+                            else int.TryParse(propertyValue as String, out size);
+
                         return uef.File != Kraken.GetImage(im) ||
-                               uef.Size != im.GetValue<int>(Constants.UmbracoPropertyAliasSize) ||
-                               uef.Height != im.GetValue<int>(Constants.UmbracoPropertyAliasHeight) ||
-                               uef.Width != im.GetValue<int>(Constants.UmbracoPropertyAliasWidth);
+                               uef.Height != height ||
+                               uef.Width != width ||
+                               uef.Size != size;
                     }
                 }
                 return false;
@@ -125,19 +147,40 @@ namespace Kraken
 
             class UmbracoEventFile
             {
+                int _height;
+                int _width;
+                int _size;
+
                 public int Id { get; private set; }
                 public string File { get; private set; }
-                public int Height { get; private set; }
-                public int Width { get; private set; }
-                public int Size { get; private set; }
+                public int Height { get { return _height; } }
+                public int Width { get { return _width; } }
+                public int Size { get { return _size; } }
 
                 public UmbracoEventFile(IMedia im)
                 {
                     Id = im.Id;
                     File = Kraken.GetImage(im); // Filename 
-                    Size = im.GetValue<int>(Constants.UmbracoPropertyAliasSize);
-                    Height = im.GetValue<int>(Constants.UmbracoPropertyAliasHeight);
-                    Width = im.GetValue<int>(Constants.UmbracoPropertyAliasWidth);
+                    // Read height
+                    var propertyValue = im.GetValue(Constants.UmbracoPropertyAliasHeight);
+                    if (propertyValue != null)
+                        if (propertyValue is int)
+                            _height = (int)propertyValue;
+                        else
+                            int.TryParse(propertyValue as String, out _height);
+                    // Read width
+                    propertyValue = im.GetValue(Constants.UmbracoPropertyAliasWidth);
+                    if (propertyValue != null)
+                        if (propertyValue is int)
+                            _width = (int)propertyValue;
+                        else
+                            int.TryParse(propertyValue as String, out _width);
+                    // Read size
+                    propertyValue = im.GetValue(Constants.UmbracoPropertyAliasSize);
+                    if (propertyValue != null)
+                        if (propertyValue is int)
+                            _size = (int)propertyValue;
+                        else int.TryParse(propertyValue as String, out _size);
                 }
             }
         }

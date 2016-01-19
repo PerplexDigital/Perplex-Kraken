@@ -34,6 +34,9 @@ namespace Kraken
         internal static EnmIsKrakable GetKrakStatus(Media im)
         {
             // Je mag een Umbraco Media node krakken onder de volgende voorwaarden:
+            var s = global::Kraken.Configuration.Settings;
+            if (String.IsNullOrEmpty(s.ApiKey) || String.IsNullOrEmpty(s.ApiSecret))
+                return EnmIsKrakable.MissingCredentials;
 
             // 1: Er zit wat in :)
             if (im == null || im.Id == 0)
@@ -61,11 +64,12 @@ namespace Kraken
             // W 18-9-2015: Vanaf nu mag je afbeeldingen re-kraken
             // 3: En dit status veld dient ook nog eens LEEG te zijn (want als je al een status hebt dan is er dus al iets gebeurd)
             //    Status betekend dus echt EINDSTATUS
-            if (p.Value != null && !String.IsNullOrEmpty(p.Value.ToString()))
+            p = im.getProperty(Constants.UmbracoPropertyAliasStatus);
+            if (p != null && p.Value != null && !String.IsNullOrEmpty(p.Value as String))
             {
-                if (p.Value == EnmKrakStatus.Original.ToString())
+                if (p.Value as String == EnmKrakStatus.Original.ToString())
                     return EnmIsKrakable.Original;
-                else if (p.Value == EnmKrakStatus.Compressed.ToString())
+                else if (p.Value as String == EnmKrakStatus.Compressed.ToString())
                     return EnmIsKrakable.Kraked;
                 else
                     // Weet niet wat het is dus niet kraken!
@@ -106,116 +110,154 @@ namespace Kraken
         /// <summary>
         /// Save the kraked image to a specific Umbraco Media node
         /// </summary>
-        /// <param name="umbracoMedia">Target media node</param>
-        /// <param name="keepOriginal">Save the original image in Umbraco?</param>
+        /// <param name="imKrakTarget">Target media node</param>
+        /// <param name="keepOriginal">Save the original image in Umbraco? Pass NULL to use global settings</param>
+        /// <param name="hasChanged">Has a new image been selected for the media node just now?</param>
         /// <returns>Success status</returns>
-        internal bool Save(Media umbracoMedia, bool? keepOriginal = null)
+        internal bool Save(Media mKrakTarget, bool? keepOriginal = null, bool hasChanged = false)
         {
-            // Invoer controle
-            var status = GetKrakStatus(umbracoMedia);
-            if (status == EnmIsKrakable.Unkrakable || String.IsNullOrEmpty(kraked_url))
-                // We kunnen niet verder
+            umbraco.cms.businesslogic.property.Property p;
+            // Validate parameters
+            var status = GetKrakStatus(mKrakTarget);
+            if (status == EnmIsKrakable.Unkrakable || status == EnmIsKrakable.Original || String.IsNullOrEmpty(kraked_url))
+                // This image is unkrakable, do not proceed
                 return false;
 
-            // Moet het plaatje gebackupped worden?
+            // Determine the path and the name of the image
+            var relativeFilepath = mKrakTarget.getProperty(Constants.UmbracoPropertyAliasFile).Value.ToString();
+            var relativeDirectory = System.IO.Path.GetDirectoryName(relativeFilepath);
+            var absoluteDirectory = System.Web.Hosting.HostingEnvironment.MapPath("~" + relativeDirectory);
+            string filename = Path.GetFileName(relativeFilepath);
             if (keepOriginal == null)
                 keepOriginal = Configuration.Settings.KeepOriginal;
 
-            // Bepaal het pad en de naam van het huidige plaatje
-            string relativeFilepath = umbracoMedia.getProperty(Constants.UmbracoPropertyAliasFile).Value.ToString();
-            string filename = Path.GetFileName(relativeFilepath);
+            // Has this media node already been Kraked before?
+            int originalSize = 0;
+            if (status == EnmIsKrakable.Kraked)
+            {
+                p = mKrakTarget.getProperty(Constants.UmbracoPropertyAliasOriginalSize);
+                if (p != null && p.Value != null)
+                    int.TryParse(p.Value.ToString(), out originalSize);
+            }
+            if (originalSize == 0)
+                originalSize = original_size;
 
-            // En sla hem op op de Umbraco Media item
-            var success = umbracoMedia.AddFile(kraked_url, filename);
-            if (!success)
-                // Als we het plaatje NIET konden krakken, downloaden of opslaan om wat voor een reden dan ook => dan STOPPEN!
-                return false;
+            var compressionRate = (((decimal)(originalSize - kraked_size)) / originalSize).ToString("p2");
 
-            umbraco.cms.businesslogic.property.Property p;
+            // The following might seem redundant, but Umbraco's "SetValue" extension method used below actually does a lot of magic for us.
+            // However, Umbraco will also create a new media folder for us to contain the new image which we do NOT want (the url to the image has to remain unchanged).
+            // So some extra efforts are required to make sure the compressed image will be switched in the place of the original image.
+
+            var originalUmbracoFilePropertyData = mKrakTarget.getProperty(Constants.UmbracoPropertyAliasFile).Value.ToString(); // Get the original property data
+            if (!mKrakTarget.AddFile(kraked_url, filename))
+                return false; // Krak failed
+            // Extract the absolute directory path
+            var newRelativeFilepath = mKrakTarget.getProperty(Constants.UmbracoPropertyAliasFile).Value.ToString(); // Retrieve the relative filepath to the new image location
+            var newRelativeDirectory = System.IO.Path.GetDirectoryName(newRelativeFilepath); // Extract the relative directoryname
+            var newAbsoluteDirectory = System.Web.Hosting.HostingEnvironment.MapPath("~" + newRelativeDirectory); // Convert to it's absolute variant
+            mKrakTarget.getProperty(Constants.UmbracoPropertyAliasFile).Value = originalUmbracoFilePropertyData; // Put the original property data back in place
+
+            // If an "original" media node is already present under the current node, then save our original data to that node.
+            // Else we will keep creating new nodes under the current node each time we save, and we never want more then 1 original node!
+            var mOriginal = mKrakTarget.Children.FirstOrDefault(x => x.Text == EnmKrakStatus.Original.ToString() && x.getProperty(Constants.UmbracoPropertyAliasStatus) != null && x.getProperty(Constants.UmbracoPropertyAliasStatus).Value as String == "Original");
+
+            // Does the original media node already exist?
+            bool originalExists = mOriginal != null;
+
+            // Do we need to keep a backup of the originally kraked image?
             if (keepOriginal.Value)
             {
-                // STEL er hangt al een originele media item onder, gebruik dan die als original media item.
-                // Anders blijven we elke keer nieuwe nodes aanmaken onder hetzelfde plaatje en dat is onzin
-                Media original = umbracoMedia.Children.FirstOrDefault(x => x.Text == "Original" && x.getProperty(Constants.UmbracoPropertyAliasStatus) != null && x.getProperty(Constants.UmbracoPropertyAliasStatus).Value != null && x.getProperty(Constants.UmbracoPropertyAliasStatus).Value.ToString() == "Original");
+                if (!originalExists)
+                    // No. Simply create a new "Original" media node under the current node, which will be used to store our "backup"
+                    mOriginal = Media.MakeNew(EnmKrakStatus.Original.ToString(), MediaType.GetByAlias(mKrakTarget.ContentType.Alias), mKrakTarget.User, mKrakTarget.Id);
 
-                // Maak een nieuwe media item aan. Deze komt te hangen ONDER de bestaande media item en zal een backup zijn van het origineel (maar wel met een andere media ID!)
-                // Was er al een original onder het huidige media item gevonden?
-                if (original == null)
-                    // Nee, in dat geval mag je hem aanmaken. Dezelfde naam, alias etc
-                    original = Media.MakeNew("Original", MediaType.GetByAlias(umbracoMedia.ContentType.Alias), umbracoMedia.User, umbracoMedia.Id);
+                // We are only allowed to MODIFY the ORIGINAL media node if the FILE has CHANGED! If the original file has not been modified, then we are ONLY allowed to create a NEW media node (aka it didn't exist before)
+                if (hasChanged || !originalExists)
+                {
+                    // Copy all properties of the current media node to the original (aka: BACKUP)
+                    foreach (var p2 in mOriginal.GenericProperties)
+                        p2.Value = mKrakTarget.getProperty(p2.PropertyType.Alias).Value;
 
-                // Kopieer alle properties van de originele afbeelding
-                foreach (var prop in original.GenericProperties)
-                    prop.Value = umbracoMedia.getProperty(prop.PropertyType.Alias).Value;
+                    // The image has been modified during the saving proces before, so correct that by specifying the correct original imag
+                    p = mOriginal.getProperty(Constants.UmbracoPropertyAliasFile);
+                    if (p != null)
+                        // Save the original data, but replace the old relative filepath with the new one
+                        p.Value = originalUmbracoFilePropertyData.Replace(relativeFilepath, newRelativeFilepath);
 
-                // Het plaatje is alleen wel voorheen aangepast dus de filename moeten we even goed zetten
-                p = original.getProperty(Constants.UmbracoPropertyAliasFile);
-                if (p != null)
-                    p.Value = relativeFilepath;
+                    // The same for filesize
+                    p = mOriginal.getProperty(Constants.UmbracoPropertyAliasSize);
+                    if (p != null)
+                        p.Value = originalSize;
 
-                // Stel op de "backup" een status in om aan te geven dat het het origineel is
-                p = original.getProperty(Constants.UmbracoPropertyAliasStatus);
-                if (p != null)
-                    p.Value = "Original";
+                    // Set the "status" of the original image to "Original", so we know in the future this is the original image
+                    p = mOriginal.getProperty(Constants.UmbracoPropertyAliasStatus);
+                    if (p != null)
+                        p.Value = EnmKrakStatus.Original.ToString();
 
-                // Sla hem op. Hierdoor komt direct het origineel onder de bestaande te hangen
-                original.Save();
+                    // Save the original node. It will be placed directly underneath the current media node
+                    mOriginal.Save();
+
+                    // Now swap the folders so everything is correct again
+                    string tmpFolder = absoluteDirectory + "_tmp";
+                    System.IO.Directory.Move(absoluteDirectory, tmpFolder);
+                    System.IO.Directory.Move(newAbsoluteDirectory, absoluteDirectory);
+                    System.IO.Directory.Move(tmpFolder, newAbsoluteDirectory);
+                }
+                else
+                {
+                    // Leave the original alone! So just replace the target folder with the compressed version
+                    if (System.IO.Directory.Exists(absoluteDirectory))
+                        System.IO.Directory.Delete(absoluteDirectory, true);
+                    System.IO.Directory.Move(newAbsoluteDirectory, absoluteDirectory);
+                }
+            }
+            else
+            {
+                if (originalExists)
+                {
+                    var originalFilePath = mOriginal.getProperty(Constants.UmbracoPropertyAliasFile).Value.ToString();
+                    var originalRelativeDirectory = System.IO.Path.GetDirectoryName(originalFilePath);
+                    var originalAbsoluteDirectory = System.Web.Hosting.HostingEnvironment.MapPath("~" + originalRelativeDirectory);
+                    mOriginal.delete(true);
+                    if (System.IO.Directory.Exists(originalAbsoluteDirectory))
+                        System.IO.Directory.Delete(originalAbsoluteDirectory, true);
+                }
+                if (System.IO.Directory.Exists(absoluteDirectory))
+                    System.IO.Directory.Delete(absoluteDirectory, true);
+                System.IO.Directory.Move(newAbsoluteDirectory, absoluteDirectory);
             }
 
-            // Toon de nieuwe afbeelding size
-            p = umbracoMedia.getProperty(Constants.UmbracoPropertyAliasSize);
-            if (p != null)
-                p.Value = kraked_size;
 
-            // Toon de gekrakte size
-            p = umbracoMedia.getProperty(Constants.UmbracoPropertyAliasOriginalSize);
+            // Show the original size
+            p = mKrakTarget.getProperty(Constants.UmbracoPropertyAliasOriginalSize);
             if (p != null)
-                p.Value = original_size;
+                p.Value = originalSize;
 
-            // Toon de krak status
-            p = umbracoMedia.getProperty(Constants.UmbracoPropertyAliasStatus);
+            // Show the kraked status
+            p = mKrakTarget.getProperty(Constants.UmbracoPropertyAliasStatus);
             if (p != null)
-                p.Value = "Compressed";
+                p.Value = EnmKrakStatus.Compressed.ToString();
 
-            // Toon de krak date
-            p = umbracoMedia.getProperty(Constants.UmbracoPropertyAliasCompressionDate);
+            // Show the kraked date
+            p = mKrakTarget.getProperty(Constants.UmbracoPropertyAliasCompressionDate);
             if (p != null)
                 p.Value = DateTime.Now.ToString();
 
-            // Toon de krak date
-            p = umbracoMedia.getProperty(Constants.UmbracoPropertyAliasCompressionDate);
+            // Show how many bytes we by kraking the image
+            p = mKrakTarget.getProperty(Constants.UmbracoPropertyAliasSaved);
             if (p != null)
-                p.Value = DateTime.Now.ToString();
+                p.Value = compressionRate;
 
-            // Plaatje breedte
-            p = umbracoMedia.getProperty(Constants.UmbracoPropertyAliasWidth);
-            if (p != null)
-                p.Value = p.Value;
+            // Save the newly (kraked) media item
+            mKrakTarget.Save();
 
-            // Plaatje hoogte
-            p = umbracoMedia.getProperty(Constants.UmbracoPropertyAliasHeight);
-            if (p != null)
-                p.Value = p.Value;
-
-            // Plaatje type
-            p = umbracoMedia.getProperty(Constants.UmbracoPropertyAliasExtension);
-            if (p != null)
-                p.Value = p.Value;
-
-            // Toon de besparing
-            p = umbracoMedia.getProperty(Constants.UmbracoPropertyAliasSaved);
-            if (original_size > 0 && saved_bytes > 0 && p != null)
-                p.Value = ((decimal)saved_bytes / original_size).ToString("p2");
-
-            // Nieuwe afbeelding opslaan
-            umbracoMedia.Save();
-
-            // Cache opruimen
+            // Clean up the cache
             HttpRuntime.Cache.Remove("kraken_" + id);
             HttpRuntime.Cache.Remove("kraken_" + id + "_user");
-            
-            // Ververs de Umbraco Media cache (anders krijg je de oude URL geserveerd)
-            umbraco.library.ClearLibraryCacheForMedia(umbracoMedia.Id);
+
+            // W 8-1-2016: Obsolete as the media URL should never change in the first place
+            // Refresh the Umbraco Media cache (else you might end up getting the old media node URL when fetching the filename)
+            //Umbraco.Web.Cache.DistributedCache.Instance.Refresh(new Guid(Umbraco.Web.Cache.DistributedCache.MediaCacheRefresherId), imKrakTarget.Id);
 
             return true;
         }
@@ -237,9 +279,26 @@ namespace Kraken
             if (p != null && p.Value != null)
             {
                 string img = p.Value.ToString();
-                string imageUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority) + img;
-                var uri = new Uri(imageUrl);
-                var result = Compress(uri, wait);
+                Kraken result = null;
+
+                try
+                {
+                    result = Compress(img, wait); // UPLOAD
+                }
+                catch (KrakenException)
+                {
+                    try
+                    {
+                        string imageUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority) + img;
+                        Uri uri;
+                        if (Uri.TryCreate(imageUrl, UriKind.Absolute, out uri))
+                            result = Compress(uri, wait); // URI
+                    }
+                    catch (KrakenException)
+                    {
+
+                    }
+                }
                 if (result != null)
                     result.MediaId = umbracoMedia.Id;
                 return result;
@@ -250,7 +309,6 @@ namespace Kraken
 
         static void StartKraking(object reKrak)
         {
-
             foreach (Media imRoot in Media.GetRootMedias())
                 processChildren(imRoot, (bool)reKrak);
         }
@@ -288,6 +346,12 @@ namespace Kraken
                             default:
                                 break;
                         }
+                    }
+                    catch (System.Threading.ThreadAbortException taex)
+                    {
+                        // Sometimes Umbraco attempts to abort a thread after a media item has been saved (possibly to redirect the user to the media node).
+                        // Cancel and proceed (really dirty code)
+                        System.Threading.Thread.ResetAbort();
                     }
                     catch (Exception ex)
                     {

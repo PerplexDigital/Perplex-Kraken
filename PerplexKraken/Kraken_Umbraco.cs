@@ -11,7 +11,7 @@ namespace Kraken
     // Alle umbraco gerelateerde code hier
     internal partial class Kraken
     {
-        internal const string umbracoCallbackUrl =  "/umbraco/perplex/KrakenCallbackApi/KrakenResults";
+        internal const string umbracoCallbackUrl = "/Base/PerplexKraken/KrakenResults"; // For now we're using the Umbraco BASE for better backwards (and forwards) compatibility. Old API url ==> "/umbraco/perplex/KrakenCallbackApi/KrakenResults";
 
         /// <summary>
         /// Umbraco Media service. Hiermee kan je Umbraco media content ophalen
@@ -121,14 +121,16 @@ namespace Kraken
         /// <returns>Success status</returns>
         internal bool Save(IMedia imKrakTarget, bool? keepOriginal = null, bool hasChanged = false)
         {
-            // Invoer controle
+            // Validate parameters
             var status = GetKrakStatus(imKrakTarget);
             if (status == EnmIsKrakable.Unkrakable || status == EnmIsKrakable.Original || String.IsNullOrEmpty(kraked_url))
-                // We kunnen niet verder
+                // This image is unkrakable, do not proceed
                 return false;
 
-            // Bepaal het pad en de naam van het huidige plaatje
-            string relativeFilepath = GetImage(imKrakTarget);
+            // Determine the path and the name of the image
+            var relativeFilepath = GetImage(imKrakTarget);
+            var relativeDirectory = System.IO.Path.GetDirectoryName(relativeFilepath);
+            var absoluteDirectory = System.Web.Hosting.HostingEnvironment.MapPath("~" + relativeDirectory);
             string filename = Path.GetFileName(relativeFilepath);
             if (keepOriginal == null)
                 keepOriginal = Configuration.Settings.KeepOriginal;
@@ -136,54 +138,32 @@ namespace Kraken
             // Has this media node already been Kraked before?
             int originalSize = 0;
             if (status == EnmIsKrakable.Kraked)
-                originalSize = imKrakTarget.GetValue<int>(Constants.UmbracoPropertyAliasOriginalSize);
+            {
+                var propertyValue = imKrakTarget.GetValue(Constants.UmbracoPropertyAliasOriginalSize);
+                if (propertyValue is int)
+                    originalSize = (int)propertyValue;
+                else
+                    int.TryParse(propertyValue as String, out originalSize);
+            }
             if (originalSize == 0)
                 originalSize = original_size;
-
+            
             var compressionRate = (((decimal)(originalSize - kraked_size)) / originalSize).ToString("p2");
             
-            // Download het plaatje
+            // Download the image from kraken.io
             var afbeelding = Helper.DownloadFile(kraked_url);
 
-            bool success = false;
-            try
-            {
-                // Simply retrieve all the data in the property as a string.
-                // Generally speaking if the property is of the file upload data type, the property will only contains the relative path to the file.
-                // However sometimes there can be more data, for example when there is a JSON object for the Image cropper.
-                var originalData = imKrakTarget.GetValue<String>(Constants.UmbracoPropertyAliasFile); // Fileupload: relative path. Image cropper: JSON (see CropperData.cs)
+            // The following might seem redundant, but Umbraco's "SetValue" extension method used below actually does a lot of magic for us.
+            // However, Umbraco will also create a new media folder for us to contain the new image which we do NOT want (the url to the image has to remain unchanged).
+            // So some extra efforts are required to make sure the compressed image will be switched in the place of the original image.
 
-                // Save the newly kraked file to the media node
-                imKrakTarget.SetValue(Constants.UmbracoPropertyAliasFile, filename, afbeelding);
-
-                // The file has now been saved to the media item, and all the other properties have magically been updated by Umbraco (size,width,height,etc)
-                // Also the data in the file property has now become a relative path (to the file).
-                
-                // Confirm the image has been saved successfully
-                var newFilepath = imKrakTarget.GetValue<String>(Constants.UmbracoPropertyAliasFile);
-                if (!String.IsNullOrEmpty(newFilepath))
-                {
-                    // Does the file exist?
-                    string absoluteFilepath = System.Web.Hosting.HostingEnvironment.MapPath(newFilepath);
-                    if (System.IO.File.Exists(absoluteFilepath))
-                    {
-                        success = true;
-                        // Determine if the property contained more data then just the relative filepath (for example in the case of JSON)
-                        if (originalData != relativeFilepath)
-                        {
-                            // We're going to approach this very simple: Take the original data, and simply replace the old filepath with the new filepath.
-                            originalData = originalData.Replace(relativeFilepath, newFilepath);
-                            // Save the modified data to the media node
-                            imKrakTarget.SetValue(Constants.UmbracoPropertyAliasFile, originalData);
-                        }
-                    }
-                }
-            }
-            catch {}
-
-            if (!success)
-                // If we were unable to Krak, download or save the image, STOP!
-                return false;
+            var originalUmbracoFilePropertyData = imKrakTarget.GetValue<String>(Constants.UmbracoPropertyAliasFile); // Get the original property data
+            imKrakTarget.SetValue(Constants.UmbracoPropertyAliasFile, filename, afbeelding); // Save the image and let Umbraco do some magic here
+            // Extract the absolute directory path
+            var newRelativeFilepath = GetImage(imKrakTarget); // Retrieve the relative filepath to the new image location
+            var newRelativeDirectory = System.IO.Path.GetDirectoryName(newRelativeFilepath); // Extract the relative directoryname
+            var newAbsoluteDirectory = System.Web.Hosting.HostingEnvironment.MapPath("~" + newRelativeDirectory); // Convert to it's absolute variant
+            imKrakTarget.SetValue(Constants.UmbracoPropertyAliasFile, originalUmbracoFilePropertyData); // Put the original property data back in place
 
             // If an "original" media node is already present under the current node, then save our original data to that node.
             // Else we will keep creating new nodes under the current node each time we save, and we never want more then 1 original node!
@@ -208,7 +188,9 @@ namespace Kraken
 
                     // The image has been modified during the saving proces before, so correct that by specifying the correct original imag
                     if (imOriginal.HasProperty(Constants.UmbracoPropertyAliasFile))
-                        imOriginal.SetValue(Constants.UmbracoPropertyAliasFile, relativeFilepath);
+                        imOriginal.SetValue(Constants.UmbracoPropertyAliasFile, 
+                            // Save the original data, but replace the old relative filepath with the new one
+                            originalUmbracoFilePropertyData.Replace(relativeFilepath, newRelativeFilepath));
 
                     // The same for filesize
                     if (imOriginal.HasProperty(Constants.UmbracoPropertyAliasSize))
@@ -220,6 +202,17 @@ namespace Kraken
 
                     // Save the original node. It will be placed directly underneath the current media node
                     ms.Save(imOriginal, UmbracoUserId, false);
+
+                    // Now swap the folders so everything is correct again
+                    string tmpFolder = absoluteDirectory + "_tmp";
+                    System.IO.Directory.Move(absoluteDirectory, tmpFolder);
+                    System.IO.Directory.Move(newAbsoluteDirectory, absoluteDirectory);
+                    System.IO.Directory.Move(tmpFolder, newAbsoluteDirectory);
+                } else {
+                    // Leave the original alone! So just replace the target folder with the compressed version
+                    if (System.IO.Directory.Exists(absoluteDirectory))
+                        System.IO.Directory.Delete(absoluteDirectory, true);
+                    System.IO.Directory.Move(newAbsoluteDirectory, absoluteDirectory);
                 }
             }
             else
@@ -229,16 +222,16 @@ namespace Kraken
                     var originalFilePath = GetImage(imOriginal);
                     var originalRelativeDirectory = System.IO.Path.GetDirectoryName(originalFilePath);
                     var originalAbsoluteDirectory = System.Web.Hosting.HostingEnvironment.MapPath("~" + originalRelativeDirectory);
+                    ms.Delete(imOriginal);
                     if (System.IO.Directory.Exists(originalAbsoluteDirectory))
                         System.IO.Directory.Delete(originalAbsoluteDirectory, true);
                 }
-                var relativeDirectory = System.IO.Path.GetDirectoryName(relativeFilepath);
-                var absoluteDirectory = System.Web.Hosting.HostingEnvironment.MapPath("~" + relativeDirectory);
                 if (System.IO.Directory.Exists(absoluteDirectory))
                     System.IO.Directory.Delete(absoluteDirectory, true);
+                System.IO.Directory.Move(newAbsoluteDirectory, absoluteDirectory);
             }
 
-            // Show the kraked size
+            // Show the original size
             if (imKrakTarget.HasProperty(Constants.UmbracoPropertyAliasOriginalSize))
                 imKrakTarget.SetValue(Constants.UmbracoPropertyAliasOriginalSize, originalSize);
 
@@ -261,8 +254,9 @@ namespace Kraken
             HttpRuntime.Cache.Remove("kraken_" + id);
             HttpRuntime.Cache.Remove("kraken_" + id + "_user");
 
+            // W 8-1-2016: Obsolete as the media URL should never change in the first place
             // Refresh the Umbraco Media cache (else you might end up getting the old media node URL when fetching the filename)
-            Umbraco.Web.Cache.DistributedCache.Instance.Refresh(new Guid(Umbraco.Web.Cache.DistributedCache.MediaCacheRefresherId), imKrakTarget.Id);
+            //Umbraco.Web.Cache.DistributedCache.Instance.Refresh(new Guid(Umbraco.Web.Cache.DistributedCache.MediaCacheRefresherId), imKrakTarget.Id);
 
             return true;
         }
@@ -291,10 +285,17 @@ namespace Kraken
                 }
                 catch (KrakenException)
                 {
-                    string imageUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority) + img;
-                    Uri uri;
-                    if (Uri.TryCreate(imageUrl, UriKind.Absolute, out uri))
-                        result = Compress(uri, wait); // URI
+                    try
+                    {
+                        string imageUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority) + img;
+                        Uri uri;
+                        if (Uri.TryCreate(imageUrl, UriKind.Absolute, out uri))
+                            result = Compress(uri, wait); // URI
+                    }
+                    catch (KrakenException)
+                    {
+
+                    }
                 }
                 if (result != null)
                     result.MediaId = umbracoMedia.Id;
@@ -307,13 +308,18 @@ namespace Kraken
         static void StartKraking(object reKrak)
         {
             if (Umbraco.Web.UmbracoContext.Current == null)
-            {
-                var request  = new HttpRequest(null, "http://localhost/umbraco/", null);
-                var response = new HttpResponse(null);
-                var context = new HttpContext(request,response);
-                var contextWrapper = new HttpContextWrapper(context);
-                Umbraco.Web.UmbracoContext.EnsureContext(contextWrapper, Umbraco.Core.ApplicationContext.Current);
-            }
+                try
+                {
+                    var request  = new HttpRequest(null, "http://localhost/umbraco/", null);
+                    var response = new HttpResponse(null);
+                    var context = new HttpContext(request,response);
+                    var contextWrapper = new HttpContextWrapper(context);
+                    Umbraco.Web.UmbracoContext.EnsureContext(contextWrapper, Umbraco.Core.ApplicationContext.Current);
+                }
+                catch
+                {
+                    // This is probably going to mean we might run into trouble when saving our images to Umbrco
+                }
             foreach (IMedia imRoot in ms.GetRootMedia())
                 processChildren(imRoot, (bool)reKrak);
         }
@@ -351,6 +357,12 @@ namespace Kraken
                             default:
                                 break;
                         }
+                    }
+                    catch (System.Threading.ThreadAbortException taex)
+                    {
+                        // Sometimes Umbraco attempts to abort a thread after a media item has been saved (possibly to redirect the user to the media node).
+                        // Cancel and proceed (really dirty code)
+                        System.Threading.Thread.ResetAbort();
                     }
                     catch (Exception ex)
                     {
@@ -512,12 +524,25 @@ namespace Kraken
                     p.DataTypeId.ToString() == Constants.UmbracoDataTypeGuidImageCropper_new)
                     try
                     {
-                        var token = Newtonsoft.Json.Linq.JObject.Parse(data);
-                        return (String)token.SelectToken("src");
+                        // Sometimes Umbraco stores JSON with unquoted keys and/or single quote values. The built in .NET json serializer can only handle double quotes.
+                        // So transform the JSON string to use double quotes on all keys and string values.
+                        data = Helper.AddJsonKeyQuotes(data);
+                        var cropper = Helper.FromJSON<CropperData>(data);
+                        if (cropper != null)
+                            return cropper.src;
+                        else
+                            return null;
                     }
                     catch { }
             }
             return null;
+        }
+
+        [System.Runtime.Serialization.DataContract]
+        private class CropperData
+        {
+            [System.Runtime.Serialization.DataMember]
+            public string src { get; set; }
         }
     }
 }

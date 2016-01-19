@@ -126,9 +126,9 @@ namespace Kraken
                         return _callbackUrl;
                     else
                     {
+                        //return "http://requestb.in/wrpmhgwr";
                         if (System.Web.HttpContext.Current != null)
-                            return "http://requestb.in/wrpmhgwr";//    string url = "/Base/PerplexKraken/KrakenResults";
-                        //return System.Web.HttpContext.Current.Request.Url.Scheme + "://" + System.Web.HttpContext.Current.Request.Url.Host + Kraken.umbracoCallbackUrl;
+                            return System.Web.HttpContext.Current.Request.Url.Scheme + Uri.SchemeDelimiter + System.Web.HttpContext.Current.Request.Url.Host + Kraken.umbracoCallbackUrl;
                         else
                             return null;
                     }

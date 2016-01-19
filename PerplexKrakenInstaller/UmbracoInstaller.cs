@@ -53,7 +53,7 @@ namespace Kraken
             try
             {
                 // Bepaal hier vanaf waar de NIEUWE versie gebruikt mag worden. Alles hiervoor = legacy
-                // W: Eigeniljk mag dit 6.0.0 zijn, maar de UmbracoApiController die zat er pas vanaf 6.1 in
+                // W: Eigeniljk mag dit 6.0.0 zijn, maar omdat Umbraco de DLL's gaat scannen loopt hij vast door 'Umbraco.Web.WebApi.UmbracoApiController' UmbracoApiController (ondanks dat deze niet wordt gebruikt)
                 Version vMinimum = new Version("6.1.0");
                 Version vCurrent = null;
                 string current = ConfigurationManager.AppSettings["umbracoConfigurationStatus"];

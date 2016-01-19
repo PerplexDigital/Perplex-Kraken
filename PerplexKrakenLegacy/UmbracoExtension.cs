@@ -113,14 +113,22 @@ namespace Kraken
             // W: Dit is niet helemaal juist. Het ID hoort uit de databaase te komen en komt nooit overeen met het node ID.
             //    Echter, in Umbraco 4 was hier nog geen handige API functie voor. Dan maar zo. Het KAN dus zijn dat je hier per ongeluk plaatjes gaat toevoegen
             //    aan een map waar al plaatjes in zitten. Opzich geen ramp want de namen van de plaatjes verschillen.
-            string relativeFolder = "/media/" + m.Id.ToString() + "/";
+            string folderName = m.Id.ToString();
+            alreadyInUse:
+            string relativeFolder = "/media/" + folderName + "/";
             string absoluteFolder = System.Web.Hosting.HostingEnvironment.MapPath(relativeFolder);
             string relativeFile = relativeFolder + name;
             string absoluteFile = absoluteFolder + name;
 
             try
             {
-                if (!System.IO.Directory.Exists(absoluteFolder))
+                if (System.IO.Directory.Exists(absoluteFolder))
+                {
+                    // Pick a different foldername that's not in use yet
+                    folderName += ".kraken";
+                    goto alreadyInUse;
+                }
+                else
                 {
                     System.IO.Directory.CreateDirectory(absoluteFolder);
                     directoryIsNew = true;
@@ -133,7 +141,7 @@ namespace Kraken
                 // Valideer het plaatje: Probeer hem als een ECHT plaatje uit te lezen. Als dat lukt, dan geloven we dat het een echt plaatje is
                 // Als het dus geen echt plaatje is dan gooit hij hier een exception
                 using (var img = System.Drawing.Image.FromFile(absoluteFile))
-                    if (img.Size.Height == 0 && img.Size.Width == 0)
+                    if (img.Size.Height == 0 || img.Size.Width == 0)
                     {
                         // Als het plaatje geen dimensies heeft dan is er iets verkeerd gegaan
                         result = false;

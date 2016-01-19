@@ -218,5 +218,65 @@ namespace Kraken
                 return new Version(ConfigurationManager.AppSettings["umbracoConfigurationStatus"]);
             }
         }
+
+        /// <summary>
+        /// Helper function that transforms a JSON string to use double quotes " around keys and replaces values that have single-quote string literals ' with double quotes ".
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        internal static string AddJsonKeyQuotes(string json)
+        {
+            var data = json.ToList();
+            bool key = false;
+            bool singleQuote = false;
+            bool doubleQuote = false;
+            for (int i = data.Count - 1; i >= 0; i--)
+            {
+                if (doubleQuote)
+                {
+                    if (data[i] == '\"' && data[i - 1] != '\\')
+                        doubleQuote = false;
+                    continue;
+                }
+                else if (!key && data[i] == '\"')
+                {
+                    doubleQuote = true;
+                    continue;
+                }
+
+                if (singleQuote)
+                {
+                    if (data[i] == '\'' && data[i - 1] != '\\')
+                    {
+                        data[i] = '\"';
+                        singleQuote = true;
+                    }
+                    continue;
+                }
+                else if (!key && data[i] == '\'')
+                {
+                    data[i] = '\"';
+                    singleQuote = false;
+                    continue;
+                }
+
+                if (data[i] == ':')
+                {
+                    key = true;
+                    data.Insert(i, '\"');
+                }
+                else if (key)
+                {
+                    if (data[i] == '{' || data[i] == ',')
+                    {
+                        key = false;
+                        data.Insert(i + 1, '\"');
+                    }
+                    else if (!Char.IsLetterOrDigit(data[i]))
+                        data.RemoveAt(i);
+                }
+            }
+            return new string(data.ToArray());
+        }
     }
 }

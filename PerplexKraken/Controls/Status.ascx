@@ -10,10 +10,10 @@
     <%
         switch (status)
         {
-            case EnmIsKrakable.MissingCredentials: %>
+            case Kraken.EnmIsKrakable.MissingCredentials: %>
                 <p>No valid API credentials could be found. A valid key can be obtained from <a href="https://kraken.io?cms=umbraco" target="_blank">kraken.io</a></p>
              <% break;
-            case EnmIsKrakable.Unkrakable: %>
+            case Kraken.EnmIsKrakable.Unkrakable: %>
                 <p>This media item cannot be optimized. Please make sure the following requirements are met:</p>
                 <ul>
                      <li>1) The alias of the property containing this data type must be named 'status'</li>
@@ -22,15 +22,15 @@
                     <li>4) The file must have the extension jpg, jpeg, png or gif. Other image types are not supported.</li>
                 </ul>
             <% break;
-            case EnmIsKrakable.Krakable: %>
+            case Kraken.EnmIsKrakable.Krakable: %>
                 <asp:LinkButton runat="server" ID="btnCompress" Text="Optimize image" OnClick="btnCompress_Click" CssClass="kraken-everything" />
                 <br /><br />This image will be optimized by <a href="https://kraken.io?cms=umbraco" target="_blank">kraken.io</a>.
             <% break;
-            case EnmIsKrakable.Kraked: %>
+            case Kraken.EnmIsKrakable.Kraked: %>
                 <p>Your image has been optimized by <a href="https://kraken.io?cms=umbraco" target="_blank">kraken.io</a></p> 
                 <asp:LinkButton runat="server" ID="lbRecompress" Text="Re-Optimize image" OnClick="btnCompress_Click" CssClass="kraken-everything" />
             <% break;
-            case EnmIsKrakable.Original: %> 
+            case Kraken.EnmIsKrakable.Original: %> 
                 <p>Your image has been optimized by <a href="https://kraken.io?cms=umbraco" target="_blank">kraken.io</a></p> 
             <% break;
         }
