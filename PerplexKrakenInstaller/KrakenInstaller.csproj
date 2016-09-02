@@ -52,26 +52,46 @@
   </Target> -->
   <!-- PERPLEXKRAKEN PACKAGE BUILD SCRIPT -->
   <Import Project="..\packages\UmbracoCms.7.2.8\build\UmbracoCms.targets" Condition="Exists('..\packages\UmbracoCms.7.2.8\build\UmbracoCms.targets')" />
-  <Import Project="..\.build\MSBuild.Community.Tasks.Targets" />
   <PropertyGroup>
     <MinUmbracoVersion>3.0.0</MinUmbracoVersion>
-    <PackageVersion>$([System.DateTime]::Now.ToString(yyyy-MM-dd))</PackageVersion>
+    <PackageVersion>$([System.DateTime]::Now.ToString(dd-MM-yy))</PackageVersion>
   </PropertyGroup>
   <PropertyGroup>
+    <RootDir>$(MSBuildProjectDirectory)</RootDir>
     <InputDir>$(SolutionDir)Input</InputDir>
     <OutputDir>$(SolutionDir)Output</OutputDir>
+    <BuildDir>$(RootDir)\BuildPackage</BuildDir>
   </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>xcopy $(TargetPath) "$(SolutionDir)Input" /Y /S</PostBuildEvent>
-  </PropertyGroup>
+  <Import Project="$(MSBuildProjectDirectory)\lib\MSBuildUmbracoTasks\MSBuild.Umbraco.Tasks.targets" />
+  <!-- CLEAN -->
   <Target Name="AfterBuild">
+    <RemoveDir Directories="$(BuildDir)" Condition="Exists('$(BuildDir)')" />
+    <MakeDir Directories="$(BuildDir)" />
     <ItemGroup>
-      <PackageFiles Include="$(InputDir)\*.*" />
+      <BinInstaller Include="$(TargetPath)" />
+      <BinRestSharp Include="$(InputDir)\RestSharp.dll" />
+      <InstallerUC Include="$(InputDir)\Installer.ascx" />
+      <PluginFiles Include="$(InputDir)\Kraken\**\*.*" />
+      <PackageFile Include="$(InputDir)\Package.xml" />
     </ItemGroup>
-    <Zip Files="@(PackageFiles)"
-        WorkingDirectory="$(InputDir)"
-        ZipFileName="$(OutputDir)\Official_Kraken_Image_Optimizer_plugin_for_Umbraco_$(PackageVersion).zip"
-        ZipLevel="9" />
+    <Copy SourceFiles="@(BinInstaller)" DestinationFolder="$(BuildDir)\bin" />
+    <Copy SourceFiles="@(BinRestSharp)" DestinationFolder="$(BuildDir)\bin" />
+    <Copy SourceFiles="@(PluginFiles)" DestinationFolder="$(BuildDir)\App_Plugins\Kraken\%(RecursiveDir)" />
+    <Copy SourceFiles="@(InstallerUC)" DestinationFolder="$(BuildDir)" />
+    <Copy SourceFiles="@(PackageFile)" DestinationFolder="$(BuildDir)" />
+    <ItemGroup>
+      <ManifestFiles Include="$(BuildDir)\**\*" Exclude="$(BuildDir)\*.*" />
+      <!--<ManifestFiles Include="$(BuildDir)\**\*" Exclude="$(BuildDir)\Package.xml,$(BuildDir)\Installer.ascx" />-->
+    </ItemGroup>
+    <ReadLinesFromFile File="$(InputDir)\Readme.txt">
+      <Output TaskParameter="Lines" ItemName="Readme" />
+    </ReadLinesFromFile>
+    <MSBuild.Umbraco.Tasks.ManifestUpdate ManifestFile="$(BuildDir)\package.xml" WorkingDirectory="$(BuildDir)" MinimumRequiredUmbracoVersion="$(MinUmbracoVersion)" PackageVersion="$(PackageVersion)" Files="@(ManifestFiles)" Readme="@(Readme->'%(Identity)', '%0a%0d')" />
+    <ItemGroup>
+      <UmbracoPackageFiles Include="$(BuildDir)\**\*.*" />
+    </ItemGroup>
+    <MSBuild.Umbraco.Tasks.Package ManifestFile="$(BuildDir)\package.xml" WorkingDirectory="$(BuildDir)" OutputDirectory="$(OutputDir)" Files="@(UmbracoPackageFiles)" />
+    <RemoveDir Directories="$(BuildDir)" Condition="Exists('$(BuildDir)')" />
     <Message Text="Nieuwe package gegenereerd ==&gt; $(SolutionDir)Output\Perp $(PackageVersion).zip" Importance="high" />
   </Target>
 </Project>

@@ -314,7 +314,6 @@ namespace Kraken
                     var response = new HttpResponse(null);
                     var context = new HttpContext(request,response);
                     var contextWrapper = new HttpContextWrapper(context);
-                    HttpContext.Current = context;
                     Umbraco.Web.UmbracoContext.EnsureContext(contextWrapper, Umbraco.Core.ApplicationContext.Current);
                 }
                 catch
@@ -398,13 +397,19 @@ namespace Kraken
 
                     // Haal het status datatype op
                     var dtdStatus = Umbraco.Core.ApplicationContext.Current.Services.DataTypeService.GetDataTypeDefinitionById(new Guid(Constants.UmbracoDatatypeGuidStatus));
+                    //if (Helper.UmbracoVersion.Major >= 7)
+                    //{
+                    //    // We zitten in Umbraco 7+. Pas het datatype definition aan om de angular variant te gebruiken ipv de usercontrol
+                    //    if (dtdStatus != null)
+                    //        Umbraco.Core.ApplicationContext.Current.Services.DataTypeService.Delete(dtdStatus);
+                    //    dtdStatus = new Umbraco.Core.Models.DataTypeDefinition(0, new Guid("00000000-0000-0000-0000-737461747573"));
+                    //    dtdStatus.Name = "Status";
+                    //    Umbraco.Core.ApplicationContext.Current.Services.DataTypeService.Save(dtdStatus);
 
-                    if (Helper.UmbracoVersion.Major >= 7)
-                    {
-                        // We zitten in Umbraco 7+. Pas het datatype definition aan om de angular variant te gebruiken ipv de usercontrol
-                        dtdStatus.PropertyEditorAlias = "status";
-                        ApplicationContext.Current.Services.DataTypeService.Save(dtdStatus);
-                    }
+                    //    //<DataType Name="Status_" Id="status" Definition="294f71db-0aa7-48fb-bc7c-7f1c40f7bb7b" DatabaseType="Ntext">
+                    //    //   <PreValues/>
+                    //    // </DataType>
+                    //}
 
                     // Property: Status
                     if (dtdStatus!= null)

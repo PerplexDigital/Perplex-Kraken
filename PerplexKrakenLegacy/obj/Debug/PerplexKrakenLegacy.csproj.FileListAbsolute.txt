@@ -1,4 +1,0 @@
-X:\Projecten\Perplex\Library\PerplexKraken\PerplexKrakenLegacy\bin\Debug\PerplexKrakenLegacy.dll
-X:\Projecten\Perplex\Library\PerplexKraken\PerplexKrakenLegacy\bin\Debug\PerplexKrakenLegacy.pdb
-X:\Projecten\Perplex\Library\PerplexKraken\PerplexKrakenLegacy\obj\Debug\PerplexKrakenLegacy.dll
-X:\Projecten\Perplex\Library\PerplexKraken\PerplexKrakenLegacy\obj\Debug\PerplexKrakenLegacy.pdb
