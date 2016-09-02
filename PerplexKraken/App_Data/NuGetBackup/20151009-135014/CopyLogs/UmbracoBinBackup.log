@@ -1,0 +1,38 @@
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : vrijdag 9 oktober 2015 13:50:14
+   Source : F:\Projecten\Github\PerplexKraken\PerplexKraken\bin\
+     Dest : F:\Projecten\Github\PerplexKraken\PerplexKraken\App_Data\NuGetBackup\20151009-135014\bin\
+
+    Files : *.*
+	    
+  Options : *.* /S /E /DCOPY:DA /COPY:DAT /R:1000000 /W:30 
+
+------------------------------------------------------------------------------
+
+	                   0	F:\Projecten\Github\PerplexKraken\PerplexKraken\bin\
+	  New Dir          3	F:\Projecten\Github\PerplexKraken\PerplexKraken\bin\Debug\
+	    New File  		   39936	Kraken.dll  0%  100%  
+	    New File  		    1252	Kraken.dll.config  0%  100%  
+	    New File  		   89600	Kraken.pdb  0%  100%  
+	  New Dir          3	F:\Projecten\Github\PerplexKraken\PerplexKraken\bin\Release\
+	    New File  		   38400	Kraken.dll  0%  100%  
+	    New File  		    1252	Kraken.dll.config  0%  100%  
+	    New File  		   73216	Kraken.pdb  0%  100%  
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :         3         2         0         0         0         0
+   Files :         6         6         0         0         0         0
+   Bytes :   237.9 k   237.9 k         0         0         0         0
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+
+
+   Speed :             6091400 Bytes/sec.
+   Speed :             348.552 MegaBytes/min.
+   Ended : vrijdag 9 oktober 2015 13:50:14
+

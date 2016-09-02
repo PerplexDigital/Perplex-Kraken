@@ -1,0 +1,40 @@
+<div ng-controller="Status.Controller" ng-init="init();" class="kraken">
+    <style>
+        .kraken .kraken-everything {display: inline-block; background: #F3C50F; color: #1a1a1a; text-transform: uppercase; font-family: Arial, Helvetica, sans-serif; text-decoration: none; font-weight: bolder; padding: 14px 16px; letter-spacing: 2px; margin-right:5px; -webkit-border-radius: 3px; -moz-border-radius: 3px; border-radius: 3px;}
+        .kraken .kraken-everything:hover {background: #1a1a1a; color: #F3C50F;}
+        .kraken p {margin: 30px 0 0; padding: 0; font-family: "Trebuchet MS", Helvetica, sans-serif;}
+        .kraken a {color: #EC297B; text-decoration:underline;}
+        .kraken a:hover {text-decoration:none;}
+    </style>
+    <p ng-show="status == enmStatus.Loading">
+        Loading <a href="https://kraken.io?cms=umbraco" target="_blank">kraken.io</a> status
+    </p>
+
+    <div ng-show="status == enmStatus.Kraked">
+        <p>Your image has been optimized by <a href="https://kraken.io?cms=umbraco" target="_blank">kraken.io</a></p>
+        <a ng-click="krake();" class="kraken-everything">
+            <span ng-show="!kraking">Re-Optimize image</span>
+            <span ng-show="kraking">Optimizing...</span>
+        </a>
+    </div>
+
+    <div ng-show="status == enmStatus.Original">
+        <p>Your image has been optimized by <a href="https://kraken.io?cms=umbraco" target="_blank">kraken.io</a></p>
+    </div>
+
+    <p ng-show="status == enmStatus.MissingCredentials">
+        No valid API credentials could be found. A valid key can be obtained from <a href="https://kraken.io?cms=umbraco" target="_blank">kraken.io</a>
+    </p>
+
+    <p ng-show="status == enmStatus.Krakable">
+        <a ng-click="krake();" class="kraken-everything">
+            <span ng-show="!kraking">Optimize image</span>
+            <span ng-show="kraking">Optimizing...</span>
+        </a>
+        This image will be optimized by <a href="https://kraken.io?cms=umbraco" target="_blank">kraken.io</a>
+    </p>
+
+    <p ng-show="status == enmStatus.Unkrakable">
+        This media item cannot be optimized
+    </p>
+</div>

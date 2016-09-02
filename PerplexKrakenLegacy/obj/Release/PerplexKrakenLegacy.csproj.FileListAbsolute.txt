@@ -1,0 +1,4 @@
+X:\Projecten\Perplex\Library\PerplexKraken\PerplexKrakenLegacy\bin\Release\PerplexKrakenLegacy.dll
+X:\Projecten\Perplex\Library\PerplexKraken\PerplexKrakenLegacy\bin\Release\PerplexKrakenLegacy.pdb
+X:\Projecten\Perplex\Library\PerplexKraken\PerplexKrakenLegacy\obj\Release\PerplexKrakenLegacy.dll
+X:\Projecten\Perplex\Library\PerplexKraken\PerplexKrakenLegacy\obj\Release\PerplexKrakenLegacy.pdb

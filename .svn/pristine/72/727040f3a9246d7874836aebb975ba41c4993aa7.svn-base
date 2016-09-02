@@ -1,0 +1,16 @@
+{    	
+	propertyEditors: [		
+		{
+			guid: "f0b6a952-e8a2-4974-b345-4954456f1d4c",
+			alias: "status",
+			name: "Status",
+			editor: {
+				view: "~/App_Plugins/Kraken/Status.html",
+				valueType: "JSON"	
+			},
+		}
+	],
+	javascript: [
+	    "~/App_Plugins/Kraken/Status.controller.js",
+	]
+}  

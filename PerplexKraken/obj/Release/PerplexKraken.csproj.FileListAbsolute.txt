@@ -1,0 +1,11 @@
+X:\Projecten\Perplex\Library\PerplexKraken\PerplexKraken\bin\Release\PerplexKraken.dll.config
+X:\Projecten\Perplex\Library\PerplexKraken\PerplexKraken\bin\Release\PerplexKraken.dll
+X:\Projecten\Perplex\Library\PerplexKraken\PerplexKraken\bin\Release\PerplexKraken.pdb
+X:\Projecten\Perplex\Library\PerplexKraken\PerplexKraken\obj\Release\PerplexKraken.dll
+X:\Projecten\Perplex\Library\PerplexKraken\PerplexKraken\obj\Release\PerplexKraken.pdb
+Y:\Projecten\Perplex\Library\PerplexKraken\PerplexKraken\bin\Release\PerplexKraken.dll.config
+Y:\Projecten\Perplex\Library\PerplexKraken\PerplexKraken\bin\Release\PerplexKraken.dll
+Y:\Projecten\Perplex\Library\PerplexKraken\PerplexKraken\bin\Release\PerplexKraken.pdb
+Y:\Projecten\Perplex\Library\PerplexKraken\PerplexKraken\obj\Release\PerplexKraken.dll
+Y:\Projecten\Perplex\Library\PerplexKraken\PerplexKraken\obj\Release\PerplexKraken.pdb
+Y:\Projecten\Perplex\Library\PerplexKraken\PerplexKraken\obj\Release\PerplexKraken.csprojResolveAssemblyReference.cache

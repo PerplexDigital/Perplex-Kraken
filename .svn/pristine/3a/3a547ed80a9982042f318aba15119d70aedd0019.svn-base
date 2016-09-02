@@ -1,0 +1,16 @@
+[core]
+	bare = false
+	filemode = false
+	symlinks = false
+	ignorecase = true
+	logallrefupdates = true
+[core]
+	repositoryformatversion = 0
+[remote "origin"]
+	url = https://github.com/PerplexWouter/PerplexKraken.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[remote "origin"]
+[branch "master"]
+	remote = origin
+[branch "master"]
+	merge = refs/heads/master
