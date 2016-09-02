@@ -141,9 +141,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy $(TargetPath) "$(SolutionDir)Input\Kraken" /Y /S
-xcopy "$(SolutionDir)PerplexKraken\Controls\Overview.ascx" "$(SolutionDir)Input\Kraken\" /Y /S
-xcopy "$(SolutionDir)PerplexKraken\Controls\Status.ascx" "$(SolutionDir)Input\Kraken\" /Y /S</PostBuildEvent>
+    <PostBuildEvent>xcopy $(TargetPath) "$(SolutionDir)Input" /Y /S
+xcopy "$(SolutionDir)PerplexKraken\Controls\Overview.ascx" "$(SolutionDir)Input" /Y /S
+xcopy "$(SolutionDir)PerplexKraken\Controls\Status.ascx" "$(SolutionDir)Input" /Y /S</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

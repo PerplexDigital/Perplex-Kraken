@@ -41,9 +41,9 @@ namespace Kraken
             }
 
             // Gooi de PerplexKraken installer ook weg
-            //target = System.Web.Hosting.HostingEnvironment.MapPath("/bin/krakeninstaller.dll");
-            //if (File.Exists(target))
-            //    File.Delete(target);
+            target = System.Web.Hosting.HostingEnvironment.MapPath("/bin/krakeninstaller.dll");
+            if (File.Exists(target))
+                File.Delete(target);
 
             return true;
         }
