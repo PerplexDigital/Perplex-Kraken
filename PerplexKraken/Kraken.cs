@@ -8,7 +8,7 @@ using System.Xml;
 namespace Kraken
 {
     // Alles wat niet gerelateerd is aan Umbraco hier
-    internal partial class Kraken
+    public partial class Kraken
     { 
         static Thread _krakThread;
 

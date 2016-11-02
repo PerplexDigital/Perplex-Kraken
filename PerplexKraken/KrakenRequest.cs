@@ -93,7 +93,7 @@ namespace Kraken
 
 
             [DataMember]
-            public string origin { get { return "umbraco"; } private set { } }
+            public string origin { get { return "Umbraco"; } private set { } }
 
             [DataMember(IsRequired = true)]
             public KrakenAuth auth { get { return KrakenAuth.Credentials; } private set { } }

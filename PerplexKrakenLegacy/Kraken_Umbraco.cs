@@ -8,7 +8,7 @@ using System.Xml;
 namespace Kraken
 {
     // Alle umbraco gerelateerde code hier
-    internal partial class Kraken
+    public partial class Kraken
     {
         internal const string umbracoCallbackUrl = "/Base/PerplexKraken/KrakenResults";
 

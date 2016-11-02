@@ -9,7 +9,7 @@ using Umbraco.Core;
 namespace Kraken
 {
     // Alle umbraco gerelateerde code hier
-    internal partial class Kraken
+    public partial class Kraken
     {
         internal const string umbracoCallbackUrl = "/Base/PerplexKraken/KrakenResults"; // For now we're using the Umbraco BASE for better backwards (and forwards) compatibility. Old API url ==> "/umbraco/perplex/KrakenCallbackApi/KrakenResults";
 
