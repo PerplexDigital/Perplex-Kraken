@@ -41,7 +41,14 @@ namespace Kraken
                     throw new KrakenException(status);
 
                 if (response.Data != null)
-                    return response.Data;
+                {
+                    var result = response.Data;
+#if DEBUG
+                    if (result.kraked_url == "undefinedimages/result.jpg")
+                        result.kraked_url = "https://kraken.io/assets/images/kraken-logotype.png";
+#endif
+                    return result;
+                }
                 else
                     return new Kraken();
             }
@@ -91,9 +98,24 @@ namespace Kraken
                 this.url = url;
             }
 
+            [DataMember]
+            public bool dev
+            {
+                get
+                {
+#if DEBUG
+                    return true;
+#else
+                    return false;
+#endif
+                }
+                set
+                {
+                }
+            }
 
             [DataMember]
-            public string origin { get { return "umbraco"; } private set { } }
+            public string origin { get { return "Umbraco"; } private set { } }
 
             [DataMember(IsRequired = true)]
             public KrakenAuth auth { get { return KrakenAuth.Credentials; } private set { } }

@@ -60,7 +60,7 @@
   <info>
     <package>
       <name>Official Kraken Image Optimizer plugin for Umbraco</name>
-      <version>1.3</version>
+      <version>1.3.1</version>
       <license url="http://opensource.org/licenses/MIT">MIT License</license>
       <url>http://kraken.io</url>
       <requirements>

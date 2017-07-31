@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="interfaces">
-      <HintPath>..\packages\UmbracoCms.Core.6.2.5\lib\interfaces.dll</HintPath>
+      <HintPath>D:\Projecten\NuGet packages\UmbracoCms.Core.6.2.5\lib\interfaces.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -51,7 +51,7 @@
   <Target Name="BeforeBuild">
   </Target> -->
   <!-- PERPLEXKRAKEN PACKAGE BUILD SCRIPT -->
-  <Import Project="..\packages\UmbracoCms.7.2.8\build\UmbracoCms.targets" Condition="Exists('..\packages\UmbracoCms.7.2.8\build\UmbracoCms.targets')" />
+  <Import Project="D:\Projecten\NuGet packages\UmbracoCms.7.2.8\build\UmbracoCms.targets" Condition="Exists('D:\Projecten\NuGet packages\UmbracoCms.7.2.8\build\UmbracoCms.targets')" />
   <Import Project="..\.build\MSBuild.Community.Tasks.Targets" />
   <PropertyGroup>
     <MinUmbracoVersion>3.0.0</MinUmbracoVersion>

@@ -38,6 +38,8 @@ namespace Kraken
             }
             catch
             {
+                // Swallowing exceptions is bad, but we definitely do not want to disrupt the flow of saving media files to Umbraco,
+                // otherwise you might not be able to save files anymore at all.
             }
         }
 
@@ -69,14 +71,14 @@ namespace Kraken
                         {
                             switch (kex.Status)
                             {
-                                // In het geval van deze foutmeldingen kunnen we niet verder gaan
+                                // In case any of these errors occur, we can no longer proceed
                                 case enmStatus.BadRequest:
                                 case enmStatus.Unauthorized:
                                 case enmStatus.Forbidden:
                                 case enmStatus.RequestLimitReached:
                                 case enmStatus.UnexpectedError:
                                     return;
-                                // En in de onderstaande gevallen mogen we gewoon door gaan
+                                // The following status messages are OK(-ish)
                                 case enmStatus.Ok:
                                 case enmStatus.FileTooLarge:
                                 case enmStatus.UnsupportedMediaType:
@@ -88,7 +90,8 @@ namespace Kraken
             }
             catch
             {
-                // Als de hel los breekt, ga dan in ieder geval door. Anders verpesten we (mogelijK) de media save event voor de gebruiker
+                // Swallowing exceptions is bad, but we definitely do not want to disrupt the flow of saving media files to Umbraco,
+                // otherwise you might not be able to save files anymore at all.
             }
         }
 

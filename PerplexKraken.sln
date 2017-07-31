@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kraken", "PerplexKraken\Kraken.csproj", "{87026D10-D6BD-43E1-845C-DE1B27F1AC38}"
 EndProject
@@ -12,6 +12,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KrakenInstaller", "PerplexK
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KrakenLegacy", "PerplexKrakenLegacy\KrakenLegacy.csproj", "{9BD7F16E-A151-4AE0-BB97-8D8A67754458}"
+	ProjectSection(ProjectDependencies) = postProject
+		{87026D10-D6BD-43E1-845C-DE1B27F1AC38} = {87026D10-D6BD-43E1-845C-DE1B27F1AC38}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kraken Unit tests", "Kraken Unit tests\Kraken Unit tests.csproj", "{8F3094E9-975D-4077-95E3-46981521AE39}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +36,10 @@ Global
 		{9BD7F16E-A151-4AE0-BB97-8D8A67754458}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BD7F16E-A151-4AE0-BB97-8D8A67754458}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BD7F16E-A151-4AE0-BB97-8D8A67754458}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F3094E9-975D-4077-95E3-46981521AE39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F3094E9-975D-4077-95E3-46981521AE39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F3094E9-975D-4077-95E3-46981521AE39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F3094E9-975D-4077-95E3-46981521AE39}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

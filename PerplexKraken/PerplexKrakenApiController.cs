@@ -1,4 +1,5 @@
-﻿using System.Web.Http;
+﻿using System;
+using System.Web.Http;
 using Umbraco.Web.WebApi;
 
 namespace Kraken
@@ -18,7 +19,7 @@ namespace Kraken
         /// <param name="imageId"></param>
         /// <returns></returns>
         [HttpGet]
-        public bool Optimize(int imageId)
+        public OptimizeResult Optimize(int imageId)
         {
             try
             {
@@ -27,22 +28,38 @@ namespace Kraken
                     var result = Kraken.Compress(imageId);
                     if (result != null && result.success)
                     {
-                        // Opslaan in Umbraco
+                        // Save to Umbraco
                         result.Save();
 
-                        // return result
-                        return true;
+                        return new OptimizeResult { Success = true };
                     }
                 }
 
-                // Not good?
-                return false;
+                // Invalid media id
+                return new OptimizeResult { Success = false, Message = "Invalid media id" };
             }
-            catch
+            catch (KrakenException kex)
             {
-                // Toon een foutmelding aan de gebruiker
-                return false;
+                return new OptimizeResult
+                {
+                    Success = false,
+                    Message = "Kraken.io error: (" + kex.Status.ToString("d") + ") " + Helper.GetEnumDescription(kex.Status)
+                };
             }
+            catch (Exception ex)
+            {
+                return new OptimizeResult
+                {
+                    Success = false,
+                    Message = "An unexpected internal error has occurred; the image could not be optimized",
+                };
+            }
+        }
+
+        public class OptimizeResult
+        {
+            public bool Success { get; set; }
+            public string Message { get; set; }
         }
     }
 }

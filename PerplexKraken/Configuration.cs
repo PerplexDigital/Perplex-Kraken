@@ -34,7 +34,16 @@ namespace Kraken
                 {
                     // Absolute pad bepalen
                     string filepath = Constants.ConfigFile;
-                    if (filepath.StartsWith("/")) filepath = System.Web.Hosting.HostingEnvironment.MapPath(filepath);
+                    if (filepath.StartsWith("/"))
+                        filepath = System.Web.Hosting.HostingEnvironment.MapPath(filepath);
+
+                    if (filepath == null)
+                    {
+                        if (Constants.ConfigFile.StartsWith("/"))
+                            filepath = Environment.CurrentDirectory + Constants.ConfigFile.Replace("/", "\\");
+                        else
+                            filepath = Environment.CurrentDirectory + "\\" + Constants.ConfigFile.Replace("/", "\\");
+                    }
                     // Uitlezen als XML
                     if (System.IO.File.Exists(filepath))
                         using (StreamReader sr = new StreamReader(filepath))

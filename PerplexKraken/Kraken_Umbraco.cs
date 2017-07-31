@@ -8,13 +8,13 @@ using Umbraco.Core;
 
 namespace Kraken
 {
-    // Alle umbraco gerelateerde code hier
-    internal partial class Kraken
+    // All Umbraco related code here
+    public partial class Kraken
     {
         internal const string umbracoCallbackUrl = "/Base/PerplexKraken/KrakenResults"; // For now we're using the Umbraco BASE for better backwards (and forwards) compatibility. Old API url ==> "/umbraco/perplex/KrakenCallbackApi/KrakenResults";
 
         /// <summary>
-        /// Umbraco Media service. Hiermee kan je Umbraco media content ophalen
+        /// The Umbraco Media service to fetch media content
         /// </summary>
         static IMediaService ms
         {
@@ -151,19 +151,23 @@ namespace Kraken
             var compressionRate = (((decimal)(originalSize - kraked_size)) / originalSize).ToString("p2");
             
             // Download the image from kraken.io
-            var afbeelding = Helper.DownloadFile(kraked_url);
+            var image = Helper.DownloadFile(kraked_url);
 
             // The following might seem redundant, but Umbraco's "SetValue" extension method used below actually does a lot of magic for us.
-            // However, Umbraco will also create a new media folder for us to contain the new image which we do NOT want (the url to the image has to remain unchanged).
-            // So some extra efforts are required to make sure the compressed image will be switched in the place of the original image.
+            // Umbraco will create a new media folder us to store the new image. However the Original URL has to remain unchanged.
+            // After we have called SetValue, we will read the location of the new image, and then restore the imKrakTarget to the original file.
 
             var originalUmbracoFilePropertyData = imKrakTarget.GetValue<String>(Constants.UmbracoPropertyAliasFile); // Get the original property data
-            imKrakTarget.SetValue(Constants.UmbracoPropertyAliasFile, filename, afbeelding); // Save the image and let Umbraco do some magic here
+            
+            imKrakTarget.SetValue(Constants.UmbracoPropertyAliasFile, filename, image); // Save the image and let Umbraco do some magic here
+
             // Extract the absolute directory path
             var newRelativeFilepath = GetImage(imKrakTarget); // Retrieve the relative filepath to the new image location
             var newRelativeDirectory = System.IO.Path.GetDirectoryName(newRelativeFilepath); // Extract the relative directoryname
             var newAbsoluteDirectory = System.Web.Hosting.HostingEnvironment.MapPath("~" + newRelativeDirectory); // Convert to it's absolute variant
-            imKrakTarget.SetValue(Constants.UmbracoPropertyAliasFile, originalUmbracoFilePropertyData); // Put the original property data back in place
+
+            // Revert changes so the media node remains unchanged (remember, we don't want the file location to change!). So we will manually swap the underlying file in a moment.
+            imKrakTarget.SetValue(Constants.UmbracoPropertyAliasFile, originalUmbracoFilePropertyData);
 
             // If an "original" media node is already present under the current node, then save our original data to that node.
             // Else we will keep creating new nodes under the current node each time we save, and we never want more then 1 original node!
@@ -283,19 +287,23 @@ namespace Kraken
                 {
                     result = Compress(img, wait); // UPLOAD
                 }
-                catch (KrakenException)
+                catch (KrakenException kex)
                 {
-                    try
+                    // Does the exception indicate that recovery is possible?
+                    if (kex.Status == enmStatus.FileTooLarge ||
+                        kex.Status == enmStatus.BadRequest ||
+                        kex.Status == enmStatus.UnexpectedError ||
+                        kex.Status == enmStatus.UnprocessableEntity ||
+                        kex.Status == enmStatus.UnsupportedMediaType)
                     {
+                        // Try to have the image optimised by passing the URL directly to kraken.io
                         string imageUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority) + img;
                         Uri uri;
                         if (Uri.TryCreate(imageUrl, UriKind.Absolute, out uri))
                             result = Compress(uri, wait); // URI
                     }
-                    catch (KrakenException)
-                    {
-
-                    }
+                    else
+                        throw; // Recovery not possible
                 }
                 if (result != null)
                     result.MediaId = umbracoMedia.Id;

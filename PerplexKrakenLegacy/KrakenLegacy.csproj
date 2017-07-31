@@ -32,15 +32,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="businesslogic">
-      <HintPath>..\packages\UmbracoCms.Core.6.2.5\lib\businesslogic.dll</HintPath>
+      <HintPath>D:\Projecten\NuGet packages\UmbracoCms.Core.6.2.5\lib\businesslogic.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="cms">
-      <HintPath>..\packages\UmbracoCms.Core.6.2.5\lib\cms.dll</HintPath>
+      <HintPath>D:\Projecten\NuGet packages\UmbracoCms.Core.6.2.5\lib\cms.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="interfaces, Version=1.0.5529.18434, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UmbracoCms.Core.6.2.5\lib\interfaces.dll</HintPath>
+      <HintPath>D:\Projecten\NuGet packages\UmbracoCms.Core.6.2.5\lib\interfaces.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="RestSharp">
@@ -56,11 +56,11 @@
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.XML" />
     <Reference Include="umbraco">
-      <HintPath>..\packages\UmbracoCms.Core.6.2.5\lib\umbraco.dll</HintPath>
+      <HintPath>D:\Projecten\NuGet packages\UmbracoCms.Core.6.2.5\lib\umbraco.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="umbraco.editorControls">
-      <HintPath>..\packages\UmbracoCms.Core.6.2.5\lib\umbraco.editorControls.dll</HintPath>
+      <HintPath>D:\Projecten\NuGet packages\UmbracoCms.Core.6.2.5\lib\umbraco.editorControls.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

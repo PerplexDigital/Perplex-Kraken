@@ -3,7 +3,7 @@
  * This datatype optimizes individual images. If the image was already optimized it shows the relevant status.
  */
 
-angular.module("umbraco").controller("Status.Controller", function ($scope, krakenOptionsResource, $routeParams) {
+angular.module("umbraco").controller("Status.Controller", function ($scope, krakenOptionsResource, $routeParams, notificationsService) {
 
     // Status enum that contains all available statusses
     $scope.enmStatus = {
@@ -41,18 +41,31 @@ angular.module("umbraco").controller("Status.Controller", function ($scope, krak
             $scope.kraking = true;
             krakenOptionsResource.krake($routeParams.id)
                 .success(function (data, status, headers, config) {
-                    $scope.kraking = true;
-                    // Reload the page
-                    location.reload();
-
+                    if (data && data.Success === true) {
+                        // Success!
+                        $scope.kraking = true;
+                        // Reload the page
+                        location.reload();
+                    }
+                    else
+                    {
+                        if (data.Message != null)
+                            // Show the server error to the user
+                            notificationsService.error(data.Message);
+                        else
+                            notificationsService.error("An error has occured while optimizing your image, please try again.");
+                        $scope.kraking = false;
+                    }
                 }).error(function (data, status, headers, config) {
-                    // Do nothing?
-                    // For now just show a message
                     $scope.kraking = false;
-                    alert("Kraking failed, please try again");
+                    // Show error
+                    if (data && data.Message != null)
+                        notificationsService.error(data.Message);
+                    else
+                        notificationsService.error("An error has occured while optimizing your image, please try again.");
                 });
         } else {
-            alert("Already kraking!");
+            notificationsService.error("Optimization in progress, please wait.");
         }
     };
 });
